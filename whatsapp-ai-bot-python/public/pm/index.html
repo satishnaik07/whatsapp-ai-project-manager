@@ -1,0 +1,1714 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WhatsApp AI Project Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        --wa-green: #075e54;
+        --wa-green-light: #25d366;
+        --wa-panel: #111b21;
+        --wa-panel-2: #202c33;
+        --wa-bg: #0b141a;
+        --text: #e9edef;
+        --text-dim: #8696a0;
+        --border: #2a3942;
+        --warn: #f0ad4e;
+        --danger: #e74c3c;
+        --ok: #25d366;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        background: var(--wa-bg);
+        color: var(--text);
+      }
+      a {
+        color: var(--wa-green-light);
+      }
+      button {
+        cursor: pointer;
+        font-family: inherit;
+      }
+      input,
+      select,
+      textarea {
+        font-family: inherit;
+        background: var(--wa-panel-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 8px;
+      }
+      .btn {
+        background: var(--wa-green);
+        border: none;
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-weight: 600;
+      }
+      .btn:hover {
+        background: #0a7a6e;
+      }
+      .btn.secondary {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+      }
+      .btn.danger {
+        background: var(--danger);
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .badge {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-weight: 600;
+      }
+      .badge.auto {
+        background: #134e3a;
+        color: var(--ok);
+      }
+      .badge.approval {
+        background: #4e3f13;
+        color: var(--warn);
+      }
+      .badge.manual {
+        background: #3a1414;
+        color: var(--danger);
+      }
+      .badge.open {
+        background: #134e3a;
+        color: var(--ok);
+      }
+      .badge.resolved {
+        background: #26313a;
+        color: var(--text-dim);
+      }
+      .badge.closed {
+        background: #26313a;
+        color: var(--text-dim);
+      }
+
+      /* login */
+      #loginScreen {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #loginBox {
+        background: var(--wa-panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 32px;
+        width: 340px;
+      }
+      #loginBox h2 {
+        margin-top: 0;
+      }
+      #loginBox input {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      #loginBox .btn {
+        width: 100%;
+      }
+      #loginErr {
+        color: var(--danger);
+        font-size: 13px;
+        min-height: 18px;
+        margin-bottom: 6px;
+      }
+      #bootstrapNote {
+        font-size: 12px;
+        color: var(--text-dim);
+        margin-top: 14px;
+        line-height: 1.5;
+      }
+
+      /* app shell */
+      #app {
+        display: none;
+        height: 100vh;
+      }
+      #app.show {
+        display: flex;
+      }
+      #nav {
+        width: 200px;
+        background: var(--wa-panel);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 16px 0;
+      }
+      #nav .brand {
+        padding: 0 16px 16px;
+        font-weight: 700;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 8px;
+      }
+      #nav .brand small {
+        display: block;
+        color: var(--text-dim);
+        font-weight: 400;
+        font-size: 12px;
+      }
+      .nav-item {
+        padding: 10px 16px;
+        color: var(--text-dim);
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .nav-item:hover {
+        background: var(--wa-panel-2);
+        color: var(--text);
+      }
+      .nav-item.active {
+        background: var(--wa-panel-2);
+        color: var(--text);
+        border-left: 3px solid var(--wa-green-light);
+      }
+      #nav .spacer {
+        flex: 1;
+      }
+      #nav .who {
+        padding: 12px 16px;
+        border-top: 1px solid var(--border);
+        font-size: 12px;
+        color: var(--text-dim);
+      }
+      #main {
+        flex: 1;
+        overflow-y: auto;
+        padding: 28px 36px;
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 20px;
+      }
+      .card {
+        background: var(--wa-panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 18px;
+        margin-bottom: 16px;
+      }
+      .grid-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .stat {
+        background: var(--wa-panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+      }
+      .stat .num {
+        font-size: 26px;
+        font-weight: 700;
+      }
+      .stat .label {
+        color: var(--text-dim);
+        font-size: 12px;
+        margin-top: 4px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th {
+        text-align: left;
+        color: var(--text-dim);
+        font-weight: 600;
+        padding: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      td {
+        padding: 8px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      tr.clickable {
+        cursor: pointer;
+      }
+      tr.clickable:hover {
+        background: var(--wa-panel-2);
+      }
+      .muted {
+        color: var(--text-dim);
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .row.between {
+        justify-content: space-between;
+      }
+      .modal-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+      }
+      .modal-bg.show {
+        display: flex;
+      }
+      .modal {
+        background: var(--wa-panel-2);
+        border-radius: 12px;
+        padding: 24px;
+        width: 480px;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      .modal h3 {
+        margin-top: 0;
+      }
+      .modal label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-dim);
+        margin: 10px 0 4px;
+      }
+      .modal input,
+      .modal select,
+      .modal textarea {
+        width: 100%;
+      }
+      .member-row {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 6px;
+        align-items: center;
+      }
+      .member-row select,
+      .member-row input {
+        flex: 1;
+      }
+      .bubble {
+        max-width: 75%;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      .bubble.client {
+        background: #202c33;
+        align-self: flex-start;
+      }
+      .bubble.internal {
+        background: #3a2e13;
+        align-self: flex-start;
+      }
+      .bubble.ai {
+        background: #005c4b;
+        align-self: flex-end;
+        margin-left: auto;
+      }
+      .bubble.unknown {
+        background: #3a1414;
+        align-self: flex-start;
+      }
+      .bubble .who {
+        font-size: 11px;
+        color: var(--text-dim);
+        margin-bottom: 3px;
+      }
+      #threadMessages {
+        display: flex;
+        flex-direction: column;
+        max-height: 50vh;
+        overflow-y: auto;
+        margin-bottom: 12px;
+      }
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--wa-panel-2);
+        border: 1px solid var(--border);
+        padding: 12px 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        z-index: 100;
+      }
+
+      /* ---------- polish layer: simple, consistent form + layout styles ---------- */
+      :root { --radius: 10px; --accent: #1f9d7a; }
+      body { font-size: 14px; line-height: 1.45; }
+      h1 { font-size: 22px; font-weight: 600; margin-bottom: 18px; }
+      h3 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+      input, select, textarea { font-size: 14px; padding: 9px 11px; border-radius: 8px; transition: border-color .15s, box-shadow .15s; }
+      input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(31,157,122,.18); }
+      textarea { resize: vertical; line-height: 1.45; }
+      ::placeholder { color: #5f7480; }
+      .btn { padding: 9px 16px; font-size: 14px; border-radius: 8px; transition: background .15s, border-color .15s; }
+      .btn.secondary:hover { background: var(--wa-panel-2); color: var(--text); }
+      .btn.sm { padding: 6px 12px; font-size: 13px; font-weight: 500; white-space: nowrap; }
+      .btn.danger-ghost { background: transparent; border: 1px solid var(--border); color: #ef6a5b; }
+      .btn.danger-ghost:hover { background: rgba(231,76,60,.12); }
+      .card { padding: 22px; border-radius: var(--radius); }
+      .hint { font-size: 12.5px; color: var(--text-dim); margin: 2px 0 0; font-weight: 400; }
+      .page-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+      .page-head h1 { margin: 0; }
+      .page-actions { display: flex; gap: 8px; }
+
+      /* form fields */
+      .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; min-width: 0; }
+      .field > label, .modal .field > label { margin: 0; font-size: 13px; font-weight: 600; color: var(--text); display: block; }
+      .field .hint { margin: 0 0 2px; }
+      .field input, .field select, .field textarea { width: 100%; }
+      .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+      .form-grid .full { grid-column: 1 / -1; }
+      .card-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
+      .divider { height: 1px; background: var(--border); margin: 20px 0; }
+      .input-row { display: flex; gap: 8px; align-items: center; }
+      .input-row > input, .input-row > select { flex: 1; min-width: 0; }
+
+      /* group detail header */
+      .detail-meta { display: grid; gap: 10px; }
+      .kv { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .kv .k { width: 130px; color: var(--text-dim); font-size: 13px; }
+      .kv select { width: auto; min-width: 220px; padding: 6px 10px; font-size: 13px; }
+      .inline-controls { display: flex; align-items: center; gap: 18px; }
+      .check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+      .check input { width: auto; margin: 0; accent-color: var(--accent); }
+
+      /* modal */
+      .modal { width: 560px; max-width: calc(100vw - 32px); max-height: 90vh; padding: 0; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+      .modal-head { padding: 22px 26px 14px; border-bottom: 1px solid var(--border); }
+      .modal-head h3 { font-size: 18px; margin: 0; }
+      .modal-body { padding: 20px 26px 6px; overflow-y: auto; }
+      .modal-foot { padding: 14px 26px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+      .modal .section { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 6px; margin-bottom: 16px; }
+      .section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+      .section-title { font-size: 13px; font-weight: 600; color: var(--text); }
+      .modal details summary { cursor: pointer; font-size: 13px; color: var(--text-dim); padding: 4px 0; }
+      .modal details summary:hover { color: var(--text); }
+      .modal details[open] summary { margin-bottom: 8px; }
+      .modal details .field:last-child { margin-bottom: 8px; }
+
+      /* member rows in the add-group modal */
+      .member-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+      .member-list:empty::before { content: "No members yet. Pick a group above and click \"Fetch members\"."; color: var(--text-dim); font-size: 13px; padding: 12px; border: 1px dashed var(--border); border-radius: 8px; text-align: center; }
+      .member-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto; gap: 8px; align-items: center; margin: 0; }
+      .member-row input { width: 100%; min-width: 0; flex: none; padding: 7px 10px; font-size: 13px; }
+      .member-row input[readonly] { background: transparent; border-color: transparent; padding-left: 0; color: var(--text); font-weight: 500; }
+      .member-row .check { white-space: nowrap; }
+      .member-row .icon-btn { background: transparent; border: none; color: var(--text-dim); font-size: 18px; line-height: 1; padding: 4px 8px; border-radius: 6px; }
+      .member-row .icon-btn:hover { background: var(--wa-panel-2); color: #ef6a5b; }
+      .modal .check { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; color: var(--text); }
+      .modal .check input { width: auto; padding: 0; margin: 0; flex: none; }
+      .member-row .icon-btn { justify-self: end; }
+      .member-row.found { background: rgba(37,211,102,.12); border-radius: 8px; padding: 4px 6px; }
+    </style>
+    <link rel="stylesheet" href="theme.css" />
+  </head>
+  <body>
+    <div id="loginScreen">
+      <div id="loginBox">
+        <h2>AI Project Manager</h2>
+        <div id="loginErr"></div>
+        <input id="loginUser" placeholder="Username" autocomplete="username" />
+        <input
+          id="loginPass"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+        />
+        <button class="btn" id="loginBtn">Log in</button>
+        <div id="bootstrapNote"></div>
+      </div>
+    </div>
+
+    <div id="app">
+      <div id="nav">
+        <div class="brand">
+          Project Manager<small>Client group PM &amp; CRM</small>
+        </div>
+        <div class="nav-item active" data-view="overview">Overview</div>
+        <div class="nav-item" data-view="groups">Client Groups</div>
+        <div class="nav-item" data-view="approvals">Approvals</div>
+        <div class="nav-item" data-view="logs">Message Logs</div>
+        <div class="nav-item" data-view="pocs" id="pocsNavItem">Team Users</div>
+        <div class="spacer"></div>
+        <div class="who" id="whoBox"></div>
+        <div class="nav-item" id="logoutBtn">Log out</div>
+      </div>
+      <div id="content">
+        <div id="topbar">
+          <button id="hamburger" aria-label="Open menu">&#9776;</button>
+          <div class="title" id="pageTitle">Dashboard</div>
+          <span class="chip" id="roleChip"></span>
+          <button id="bell" aria-label="Notifications">&#128276;<span class="badge-n" id="bellN">0</span></button>
+        </div>
+        <div id="main"></div>
+      </div>
+      <div id="scrim"></div>
+    </div>
+
+    <!-- Add / edit group modal -->
+    <div class="modal-bg" id="groupModalBg">
+      <div class="modal">
+        <div class="modal-head">
+          <h3>Add client group</h3>
+          <p class="hint">Connect a WhatsApp group, then choose the client and your point of contact.</p>
+        </div>
+
+        <div class="modal-body">
+          <div class="field">
+            <label>WhatsApp account</label>
+            <select id="gmAccount"></select>
+          </div>
+
+          <div class="field">
+            <label>Group</label>
+            <div class="input-row">
+              <select id="gmDiscovered">
+                <option value="">Select a group</option>
+              </select>
+              <button class="btn secondary sm" id="gmDiscoverBtn" type="button">Find my groups</button>
+            </div>
+            <details style="margin-top:6px;">
+              <summary>Enter group ID manually</summary>
+              <div class="field">
+                <label>Group ID</label>
+                <input id="gmGroupId" placeholder="120363xxxxxxxx@g.us" />
+              </div>
+              <div class="field">
+                <label>Group name</label>
+                <input id="gmGroupName" placeholder="e.g. ORA Website Development" />
+              </div>
+            </details>
+          </div>
+
+          <div class="section">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Members</div>
+                <div class="hint">Tick <b>Client</b> for client-side people. Everyone else is treated as your team.</div>
+              </div>
+              <button class="btn secondary sm" id="gmFetchMembersBtn" type="button">Fetch members</button>
+            </div>
+            <div id="gmMembers" class="member-list"></div>
+            <div class="input-row">
+              <input id="gmFindNumber" placeholder="Find by phone number, e.g. 919082470614" />
+              <button class="btn secondary sm" id="gmFindBtn" type="button">Find</button>
+              <button class="btn secondary sm" id="gmAddMemberBtn" type="button">+ Add manually</button>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Point of contact (POC)</div>
+                <div class="hint">Your internal person for this group. Clients are excluded.</div>
+              </div>
+              <button class="btn secondary sm" id="gmFetchPocBtn" type="button">Load list</button>
+            </div>
+            <select id="gmPocMember">
+              <option value="">Fetch members first</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>AI reply mode</label>
+            <select id="gmMode">
+              <option value="approval">Approval: a team member approves each AI reply</option>
+              <option value="auto">Automatic: AI replies on its own</option>
+              <option value="manual">Manual: AI never replies</option>
+            </select>
+          </div>
+
+          <details style="margin-bottom:14px;">
+            <summary>Advanced: restrict dashboard login (optional)</summary>
+            <div class="field">
+              <div class="hint">Only needed if one specific Team User should manage this group. Separate from the POC above, which is a WhatsApp contact.</div>
+              <select id="gmPoc">
+                <option value="">No restriction (any admin can manage)</option>
+              </select>
+            </div>
+          </details>
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn secondary" id="gmCancelBtn">Cancel</button>
+          <button class="btn" id="gmSaveBtn">Save group</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thread / conversation modal -->
+    <div class="modal-bg" id="threadModalBg">
+      <div class="modal" style="width: 600px">
+        <h3 id="threadModalTitle">Conversation</h3>
+        <div
+          id="threadAiState"
+          class="muted"
+          style="font-size: 12px; margin-bottom: 8px"
+        ></div>
+        <div id="threadMessages"></div>
+        <div class="row">
+          <input
+            id="threadReplyText"
+            placeholder="Send a manual reply to this group…"
+            style="flex: 1"
+          />
+          <button class="btn" id="threadReplySendBtn">Send</button>
+        </div>
+        <div class="muted" style="font-size: 11px; margin-top: 6px">
+          A manual reply here also counts as a human taking over — any AI
+          auto-reply still waiting to send for this thread will be cancelled.
+        </div>
+        <div
+          class="row"
+          style="margin-top: 12px; justify-content: space-between"
+        >
+          <div>
+            <button class="btn secondary" id="threadPauseBtn">Pause AI</button>
+            <button class="btn secondary" id="threadResumeBtn">
+              Resume AI
+            </button>
+          </div>
+          <div>
+            <select id="threadStatusSelect">
+              <option value="open">Open</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+        </div>
+        <button
+          class="btn secondary"
+          id="threadCloseBtn"
+          style="margin-top: 16px; width: 100%"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- Add POC user modal -->
+    <div class="modal-bg" id="pocModalBg">
+      <div class="modal">
+        <h3>Add team user</h3>
+        <label>Username</label><input id="pmUsername" /> <label>Name</label
+        ><input id="pmName" /> <label>Password (min 8 chars)</label
+        ><input id="pmPassword" type="password" />
+        <label>Role</label>
+        <select id="pmRole">
+          <option value="poc">POC</option>
+          <option value="admin">Admin</option>
+        </select>
+        <div class="row" style="margin-top: 18px; justify-content: flex-end">
+          <button class="btn secondary" id="pmCancelBtn">Cancel</button>
+          <button class="btn" id="pmSaveBtn">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API = "/api/pm";
+      let TOKEN = localStorage.getItem("pm_token") || null;
+      let ME = null;
+      let ACCOUNTS = []; // whatsapp accounts (from the main dashboard's /api/accounts)
+      let POCS = [];
+      let CURRENT_THREAD = null;
+
+      function toast(msg) {
+        const t = document.createElement("div");
+        t.className = "toast";
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3500);
+      }
+
+      async function api(path, opts = {}) {
+        const headers = Object.assign(
+          { "Content-Type": "application/json" },
+          opts.headers || {},
+        );
+        if (TOKEN) headers["Authorization"] = "Bearer " + TOKEN;
+        const res = await fetch(
+          API + path,
+          Object.assign({}, opts, { headers }),
+        );
+        if (res.status === 401) {
+          logout();
+          throw new Error("Session expired");
+        }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok)
+          throw new Error(data.detail || "Request failed (" + res.status + ")");
+        return data;
+      }
+
+      function logout() {
+        TOKEN = null;
+        ME = null;
+        localStorage.removeItem("pm_token");
+        document.getElementById("app").classList.remove("show");
+        document.getElementById("loginScreen").style.display = "flex";
+      }
+
+      // ---------------- Login ----------------
+
+      document.getElementById("loginBtn").onclick = async () => {
+        const username = document.getElementById("loginUser").value.trim();
+        const password = document.getElementById("loginPass").value;
+        const errBox = document.getElementById("loginErr");
+        errBox.textContent = "";
+        try {
+          let data;
+          try {
+            data = await api("/auth/login", {
+              method: "POST",
+              body: JSON.stringify({ username, password }),
+            });
+          } catch (e) {
+            // First-ever run: no admin exists yet -> offer to bootstrap one.
+            if (String(e.message).toLowerCase().includes("invalid username"))
+              throw e;
+            const boot = confirm(
+              "No login found. If this is first-time setup, create the first admin account with these credentials?",
+            );
+            if (!boot) throw e;
+            data = await api("/auth/bootstrap-admin", {
+              method: "POST",
+              body: JSON.stringify({ username, password, name: username }),
+            });
+          }
+          TOKEN = data.token;
+          ME = data.poc;
+          localStorage.setItem("pm_token", TOKEN);
+          await boot();
+        } catch (e) {
+          errBox.textContent = e.message;
+        }
+      };
+
+      document.getElementById("logoutBtn").onclick = logout;
+
+      // ---------------- Boot ----------------
+
+      async function boot() {
+        try {
+          if (!ME) ME = await api("/auth/me");
+        } catch (e) {
+          logout();
+          return;
+        }
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("app").classList.add("show");
+        document.getElementById("whoBox").textContent =
+          ME.name + " (" + ME.role + ")";
+        document.getElementById("pocsNavItem").style.display =
+          ME.role === "admin" ? "block" : "none";
+
+        try {
+          ACCOUNTS = await fetch("/api/accounts").then((r) => r.json());
+        } catch (e) {
+          ACCOUNTS = [];
+        }
+        try {
+          POCS = ME.role === "admin" ? await api("/pocs") : [];
+        } catch (e) {
+          POCS = [];
+        }
+
+        showView("overview");
+      }
+
+      document.querySelectorAll(".nav-item[data-view]").forEach((el) => {
+        el.onclick = () => showView(el.dataset.view);
+      });
+
+      function setActiveNav(view) {
+        document.querySelectorAll(".nav-item[data-view]").forEach((el) => {
+          el.classList.toggle("active", el.dataset.view === view);
+        });
+      }
+
+      async function showView(view) {
+        setActiveNav(view);
+        const main = document.getElementById("main");
+        main.innerHTML = "<p class='muted'>Loading…</p>";
+        try {
+          if (view === "overview") await renderOverview(main);
+          else if (view === "groups") await renderGroups(main);
+          else if (view === "approvals") await renderApprovals(main);
+          else if (view === "logs") await renderLogs(main);
+          else if (view === "pocs") await renderPocs(main);
+        } catch (e) {
+          main.innerHTML =
+            "<p style='color:var(--danger)'>" + e.message + "</p>";
+        }
+      }
+
+      // ---------------- Overview ----------------
+
+      async function renderOverview(main) {
+        const stats = await api("/overview");
+        main.innerHTML = `
+    <h1>Overview</h1>
+    <div class="grid-stats">
+      <div class="stat"><div class="num">${stats.active_groups}</div><div class="label">Active client groups</div></div>
+      <div class="stat"><div class="num">${stats.open_conversations}</div><div class="label">Open conversations</div></div>
+      <div class="stat"><div class="num">${stats.pending_approvals}</div><div class="label">Pending approvals</div></div>
+      <div class="stat"><div class="num">${stats.failed_messages}</div><div class="label">Failed messages</div></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Recent client messages</h3>
+      <table><thead><tr><th>Group</th><th>Message</th><th>When</th></tr></thead>
+      <tbody>${
+        (stats.recent_client_messages || [])
+          .map(
+            (m) => `
+        <tr><td>${esc(m.group_name || "")}</td>
+            <td>${esc((m.body || "").slice(0, 80))}</td><td class="muted">${esc(m.created_at || "")}</td></tr>
+      `,
+          )
+          .join("") ||
+        `<tr><td colspan="3" class="muted">No client messages yet.</td></tr>`
+      }</tbody></table>
+    </div>
+  `;
+      }
+
+      // ---------------- Groups ----------------
+
+      async function renderGroups(main) {
+        const groups = await api("/groups");
+        main.innerHTML = `
+    <div class="page-head"><h1>Client Groups</h1>
+      ${ME.role === "admin" ? `<button class="btn" id="addGroupBtn">+ Add group</button>` : ""}
+    </div>
+    <div class="card">
+      <table><thead><tr><th>Group</th><th>POC</th><th>Mode</th><th>AI</th></tr></thead>
+      <tbody>${
+        groups
+          .map(
+            (g) => `
+        <tr class="clickable" data-id="${g.id}">
+          <td>${esc(g.group_name || g.whatsapp_group_id)}</td>
+          <td>${esc(pocDisplay(g))}</td>
+          <td><span class="badge ${g.ai_mode}">${g.ai_mode}</span></td>
+          <td>${g.ai_enabled ? "On" : "Off"}</td>
+        </tr>`,
+          )
+          .join("") ||
+        `<tr><td colspan="4" class="muted">No client groups configured yet.</td></tr>`
+      }
+      </tbody></table>
+    </div>
+  `;
+        main.querySelectorAll("tr[data-id]").forEach((row) => {
+          row.onclick = () => openGroupDetail(parseInt(row.dataset.id, 10));
+        });
+        const addBtn = document.getElementById("addGroupBtn");
+        if (addBtn) addBtn.onclick = openGroupModal;
+      }
+
+      async function openGroupDetail(groupId) {
+        const g = await api("/groups/" + groupId);
+        const threads = await api("/groups/" + groupId + "/threads");
+        const main = document.getElementById("main");
+        main.innerHTML = `
+    <div class="page-head"><h1>${esc(g.group_name || g.whatsapp_group_id)}</h1>
+      <div class="page-actions">
+        <button class="btn secondary sm" id="backBtn">← Back to groups</button>
+        ${ME.role === "admin" ? `<button class="btn danger-ghost sm" id="deleteGroupBtn">Delete group</button>` : ""}
+      </div></div>
+    <div class="card">
+      <div class="row between" style="align-items:flex-start;">
+        <div class="detail-meta">
+          <div class="kv"><span class="k">WhatsApp group</span><span>${esc(g.group_name || g.whatsapp_group_id)}</span></div>
+        </div>
+        <div class="inline-controls">
+          <label class="check" style="margin:0;">Mode
+            <select id="modeSelect" style="width:auto;padding:6px 10px;font-size:13px;">
+              <option value="auto" ${g.ai_mode === "auto" ? "selected" : ""}>Automatic</option>
+              <option value="approval" ${g.ai_mode === "approval" ? "selected" : ""}>Approval</option>
+              <option value="manual" ${g.ai_mode === "manual" ? "selected" : ""}>Manual</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" id="aiEnabledCk" ${g.ai_enabled ? "checked" : ""}/> AI enabled</label>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Project context</h3>
+      <p class="hint" style="margin-bottom:16px;">What the AI reads before every reply. The more accurate this is, the better its answers.</p>
+      <div class="form-grid">
+        <div class="field">
+          <label for="ctxDesc">Description</label>
+          <div class="hint">What this project is, in one or two lines</div>
+          <textarea id="ctxDesc" rows="4" placeholder="e.g. E-commerce website rebuild for ABC Traders (WordPress + WooCommerce)">${esc(g.project_context?.description || "")}</textarea>
+        </div>
+        <div class="field">
+          <label for="ctxScope">Scope</label>
+          <div class="hint">What is and isn't included</div>
+          <textarea id="ctxScope" rows="4" placeholder="e.g. Includes homepage, product pages, checkout and payment gateway. Does not include the mobile app.">${esc(g.project_context?.scope || "")}</textarea>
+        </div>
+        <div class="field">
+          <label for="ctxComm">Communication instructions</label>
+          <div class="hint">Tone and rules specific to this client</div>
+          <textarea id="ctxComm" rows="4" placeholder="e.g. Client is non-technical, avoid jargon. Never discuss pricing; say a team member will follow up.">${esc(g.project_context?.communication_instructions || "")}</textarea>
+        </div>
+        <div class="field">
+          <label for="ctxStatus">Status</label>
+          <div class="hint">One short phrase for where things stand now</div>
+          <input id="ctxStatus" placeholder="e.g. In development, UAT next week" value="${esc(g.project_context?.status || "")}" />
+        </div>
+      </div>
+      <div class="card-actions"><button class="btn" id="saveCtxBtn">Save context</button></div>
+      <div class="divider"></div>
+      <div id="vuMount"></div>
+    </div>
+    <div class="card">
+      <div class="row between"><h3 style="margin-top:0;">Members</h3>
+        <button class="btn secondary" id="syncMembersBtn" style="padding:4px 10px;font-size:12px;">Sync from WhatsApp</button></div>
+      <table><thead><tr><th>Name</th><th>Phone number</th><th>JID</th><th>Role</th><th></th></tr></thead>
+      <tbody id="membersBody">${
+        (g.members || [])
+          .map(
+            (m) => `
+        <tr><td>${esc(m.member_name || "—")}</td>
+            <td>${esc(m.member_phone ? m.member_phone.split("@")[0] : "—")}</td>
+            <td class="muted">${esc(m.member_jid)}</td>
+            <td>${m.role}</td>
+            <td><button class="btn secondary" data-remove-jid="${esc(m.member_jid)}" style="padding:2px 8px;font-size:11px;">Remove</button></td></tr>
+      `,
+          )
+          .join("") ||
+        `<tr><td colspan="5" class="muted">No members configured.</td></tr>`
+      }</tbody></table>
+      <div id="syncMembersArea"></div>
+    </div>
+    <div class="card">
+      <div class="row between">
+        <h3 style="margin-top:0;">Conversation threads</h3>
+        ${ME.role === "admin" ? `<button class="btn secondary sm" id="syncHistoryBtn">Import older chat history</button>` : ""}
+      </div>
+      <table><thead><tr><th>Thread</th><th>Status</th><th>Created</th></tr></thead>
+      <tbody>${
+        threads
+          .map(
+            (t) => `
+        <tr class="clickable" data-thread="${t.id}"><td>${esc(t.thread_key)}</td>
+            <td><span class="badge ${t.status}">${t.status}</span>${t.ai_paused ? ' <span class="badge manual">AI paused</span>' : ""}</td>
+            <td class="muted">${esc(t.created_at)}</td></tr>
+      `,
+          )
+          .join("") ||
+        `<tr><td colspan="3" class="muted">No conversations yet.</td></tr>`
+      }</tbody></table>
+    </div>
+  `;
+        document.getElementById("backBtn").onclick = () => showView("groups");
+        const syncHistoryBtn = document.getElementById("syncHistoryBtn");
+        if (syncHistoryBtn)
+          syncHistoryBtn.onclick = async () => {
+            syncHistoryBtn.disabled = true;
+            syncHistoryBtn.textContent = "Importing…";
+            try {
+              const r = await api("/groups/" + groupId + "/sync-history", { method: "POST" });
+              toast(
+                r.imported_now
+                  ? `Imported ${r.imported_now} older message(s). Requesting more from WhatsApp — reopen this group in ~15s for anything further.`
+                  : "No new backlog available right now — asked WhatsApp for more; reopen this group in ~15s.",
+              );
+              openGroupDetail(groupId);
+            } catch (e) {
+              toast(e.message);
+              syncHistoryBtn.disabled = false;
+              syncHistoryBtn.textContent = "Import older chat history";
+            }
+          };
+        const deleteBtn = document.getElementById("deleteGroupBtn");
+        if (deleteBtn)
+          deleteBtn.onclick = async () => {
+            if (
+              !confirm(
+                `Delete "${g.group_name || g.whatsapp_group_id}"? This removes all of its members, ` +
+                  `conversation threads and message history from this dashboard permanently. ` +
+                  `The WhatsApp group itself is not affected.`,
+              )
+            )
+              return;
+            try {
+              await api("/groups/" + groupId, { method: "DELETE" });
+              toast("Group deleted");
+              showView("groups");
+            } catch (e) {
+              toast(e.message);
+            }
+          };
+        document.getElementById("modeSelect").onchange = async (e) => {
+          await api("/groups/" + groupId, {
+            method: "PATCH",
+            body: JSON.stringify({ ai_mode: e.target.value }),
+          });
+          toast("Reply mode updated");
+        };
+        document.getElementById("aiEnabledCk").onchange = async (e) => {
+          await api("/groups/" + groupId, {
+            method: "PATCH",
+            body: JSON.stringify({ ai_enabled: e.target.checked ? 1 : 0 }),
+          });
+          toast("AI " + (e.target.checked ? "enabled" : "disabled"));
+        };
+        document.getElementById("saveCtxBtn").onclick = async () => {
+          const btn = document.getElementById("saveCtxBtn");
+          btn.disabled = true;
+          try {
+            await api("/groups/" + groupId + "/context", {
+              method: "PUT",
+              body: JSON.stringify({
+                description: document.getElementById("ctxDesc").value,
+                scope: document.getElementById("ctxScope").value,
+                status: document.getElementById("ctxStatus").value,
+                communication_instructions:
+                  document.getElementById("ctxComm").value,
+              }),
+            });
+            toast("Project context saved. The AI will use it from the next reply.");
+          } catch (e) {
+            toast("Could not save: " + e.message);
+          } finally {
+            btn.disabled = false;
+          }
+        };
+        const vuMount = document.getElementById("vuMount");
+        if (vuMount && window.mountVerifiedUpdates)
+          window.mountVerifiedUpdates(vuMount, {
+            title: "Verified updates",
+            load: () => api("/groups/" + groupId + "/verified-updates"),
+            add: (body) =>
+              api("/groups/" + groupId + "/context/updates", {
+                method: "POST",
+                body: JSON.stringify(body),
+              }),
+          });
+        main.querySelectorAll("[data-remove-jid]").forEach((btn) => {
+          btn.onclick = async () => {
+            if (!confirm("Remove this member?")) return;
+            await api(
+              "/groups/" +
+                groupId +
+                "/members/" +
+                encodeURIComponent(btn.dataset.removeJid),
+              { method: "DELETE" },
+            );
+            openGroupDetail(groupId);
+          };
+        });
+        document.getElementById("syncMembersBtn").onclick = async () => {
+          const area = document.getElementById("syncMembersArea");
+          area.innerHTML = `<p class="muted">Fetching…</p>`;
+          try {
+            const fetched = await api(
+              "/discover-groups/" +
+                encodeURIComponent(g.whatsapp_group_id) +
+                "/members?account_id=" +
+                encodeURIComponent(g.account_id),
+            );
+            const existingJids = new Set(
+              (g.members || []).map((m) => m.member_jid),
+            );
+            const newOnes = fetched.filter((m) => !existingJids.has(m.jid));
+            if (!newOnes.length) {
+              area.innerHTML = `<p class="muted" style="margin-top:10px;">Every current WhatsApp member is already in this list.</p>`;
+              return;
+            }
+            area.innerHTML = `
+        <div class="muted" style="font-size:12px;margin:10px 0 6px;">
+          ${newOnes.length} new member(s) found on WhatsApp — tick "Client" for client-side people, then add.
+        </div>
+        <div id="syncRows"></div>
+        <button class="btn secondary" id="addSyncedBtn" style="margin-top:6px;">Add selected</button>
+      `;
+            const rows = document.getElementById("syncRows");
+            newOnes.forEach((m) => {
+              const row = document.createElement("div");
+              row.className = "member-row";
+              // Show WhatsApp's name + phone number when we know them (memberLabel
+              // — see bridge/index.js's contactNamesByAccount), since m.jid can be
+              // an opaque "...@lid" on its own.
+              const display = memberLabel(m.name, m.phoneNumber, m.jid);
+              const editableName =
+                m.name || (m.phoneNumber || m.jid || "").split("@")[0];
+              row.innerHTML = `
+          <input class="m-jid" value="${esc(display)}" data-raw-jid="${esc(m.jid)}" data-raw-phone="${esc(m.phoneNumber || "")}" readonly/>
+          <input class="m-name" placeholder="name (optional)" value="${esc(editableName)}"/>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap;margin:0;">
+            <input type="checkbox" class="m-client"/> Client
+          </label>
+        `;
+              rows.appendChild(row);
+            });
+            document.getElementById("addSyncedBtn").onclick = async () => {
+              const toAdd = Array.from(
+                rows.querySelectorAll(".member-row"),
+              ).map((r) => {
+                const input = r.querySelector(".m-jid");
+                return {
+                  jid: input.dataset.rawJid,
+                  phone: input.dataset.rawPhone || "",
+                  name: r.querySelector(".m-name").value.trim(),
+                  role: r.querySelector(".m-client").checked
+                    ? "client"
+                    : "internal",
+                };
+              });
+              for (const m of toAdd) {
+                await api("/groups/" + groupId + "/members", {
+                  method: "POST",
+                  body: JSON.stringify(m),
+                });
+              }
+              toast("Members added");
+              openGroupDetail(groupId);
+            };
+          } catch (e) {
+            toast(e.message);
+          }
+        };
+        main.querySelectorAll("[data-thread]").forEach((row) => {
+          row.onclick = () => openThread(parseInt(row.dataset.thread, 10), g);
+        });
+      }
+
+      // ---------------- Add group modal ----------------
+
+      function accountOptionsHtml() {
+        return ACCOUNTS.map(
+          (a) =>
+            `<option value="${esc(a.id)}">${esc(a.name || a.phone_number || a.id)}</option>`,
+        ).join("");
+      }
+      function pocOptionsHtml() {
+        return (
+          `<option value="">Unassigned</option>` +
+          POCS.map(
+            (p) => `<option value="${p.id}">${esc(p.name)}</option>`,
+          ).join("")
+        );
+      }
+
+      // How a fetched member is labelled everywhere in this modal: prefer their
+      // WhatsApp name, append the phone number in brackets when we also know
+      // that; fall back to just the phone number, and only fall back further to
+      // the raw jid/lid digits if WhatsApp has given us neither (see
+      // bridge/index.js's contactNamesByAccount — a name is only known once
+      // they've messaged before or synced into the address book).
+      function memberLabel(name, phone, jid) {
+        const phoneDigits = phone ? phone.split("@")[0] : "";
+        // WhatsApp sometimes uses the number itself as the "name" — don't show it twice
+        if (name && name.replace(/\D/g, "") === phoneDigits) name = "";
+        if (name && phoneDigits) return `${name} (+${phoneDigits})`;
+        if (phoneDigits) return "+" + phoneDigits;
+        const raw = (jid || "").split("@")[0];
+        if (name) return `${name} (number hidden by WhatsApp · ID ${raw})`;
+        return `Unknown number (WhatsApp ID ${raw})`;
+      }
+
+      // g.poc_name/g.poc_phone = the WhatsApp member tagged POC (see
+      // group_db.set_poc_member) — that's the real point-of-contact shown
+      // everywhere. g.login_poc_name is only the separate, optional "restrict
+      // dashboard login" assignment — shown as a fallback, clearly labelled, so
+      // it doesn't get confused with an actual POC.
+      function pocDisplay(g) {
+        if (g.poc_name || g.poc_phone || g.poc_jid)
+          return memberLabel(g.poc_name, g.poc_phone, g.poc_jid);
+        if (g.login_poc_name)
+          return g.login_poc_name + " (dashboard login only)";
+        return "Unassigned";
+      }
+
+      function openGroupModal() {
+        document.getElementById("gmAccount").innerHTML = accountOptionsHtml();
+        document.getElementById("gmPoc").innerHTML = pocOptionsHtml();
+        document.getElementById("gmGroupId").value = "";
+        document.getElementById("gmGroupName").value = "";
+        document.getElementById("gmDiscovered").innerHTML =
+          `<option value="">Select a group</option>`;
+        document.getElementById("gmMembers").innerHTML = "";
+        document.getElementById("gmPocMember").innerHTML =
+          `<option value="">Fetch members first</option>`;
+        document.getElementById("gmFindNumber").value = "";
+        document.getElementById("groupModalBg").classList.add("show");
+      }
+      document.getElementById("gmCancelBtn").onclick = () =>
+        document.getElementById("groupModalBg").classList.remove("show");
+
+      document.getElementById("gmDiscoverBtn").onclick = async () => {
+        const accountId = document.getElementById("gmAccount").value;
+        if (!accountId) return toast("Pick a WhatsApp account first");
+        try {
+          const groups = await api(
+            "/discover-groups?account_id=" + encodeURIComponent(accountId),
+          );
+          const sel = document.getElementById("gmDiscovered");
+          sel.innerHTML =
+            `<option value="">Select a group</option>` +
+            groups
+              .map(
+                (g) =>
+                  `<option value="${esc(g.jid)}" data-name="${esc(g.name)}">${esc(g.name)} (${g.participantCount} members)</option>`,
+              )
+              .join("");
+          if (!groups.length)
+            toast("No groups found — is this account's session connected?");
+        } catch (e) {
+          toast(e.message);
+        }
+      };
+      document.getElementById("gmDiscovered").onchange = async (e) => {
+        const opt = e.target.selectedOptions[0];
+        if (!opt || !opt.value) return;
+        document.getElementById("gmGroupId").value = opt.value;
+        document.getElementById("gmGroupName").value = opt.dataset.name || "";
+        // Convenience: fetch the real member list right away so the admin
+        // doesn't have to click a second button for the common case.
+        await fetchGroupMembersIntoForm();
+      };
+
+      // A manually-typed value with no "@" in it is a phone number, not a jid —
+      // normalize it to a proper phone-number jid so it matches what a *real*
+      // message from that number will carry as senderPhone (see
+      // server/group_db.py resolve_sender_role / bridge/index.js
+      // getParticipantPhoneMap). Strips spaces, dashes and a leading "+".
+      function normalizePhoneInput(raw) {
+        const v = (raw || "").trim();
+        if (!v || v.includes("@")) return v; // already a jid (incl. "...@lid") — leave as-is
+        const digits = v.replace(/[^0-9]/g, "");
+        return digits ? digits + "@s.whatsapp.net" : "";
+      }
+
+      async function fetchGroupMembersIntoForm() {
+        const accountId = document.getElementById("gmAccount").value;
+        const groupJid = document.getElementById("gmGroupId").value.trim();
+        if (!accountId || !groupJid)
+          return toast("Pick a WhatsApp account and a group first");
+        try {
+          const members = await api(
+            "/discover-groups/" +
+              encodeURIComponent(groupJid) +
+              "/members?account_id=" +
+              encodeURIComponent(accountId),
+          );
+          if (!members.length) {
+            toast("No members found — is this account's session connected?");
+            return;
+          }
+          document.getElementById("gmMembers").innerHTML = "";
+          members.forEach((m) =>
+            addMemberRow(m.jid, m.name || "", false, true, m.phoneNumber || ""),
+          );
+          // Rows still showing a raw jid/lid (no name AND no phone resolved) mean
+          // WhatsApp hasn't given this account a name/number pairing for that
+          // member yet — usually because the session was linked recently and
+          // contact/history sync is still catching up. Re-fetching a bit later
+          // usually fills these in, so surface that instead of leaving the admin
+          // guessing which "1234@lid" row is which real client.
+          const unresolved = members.filter(
+            (m) => !m.name && !m.phoneNumber,
+          ).length;
+          let msg =
+            members.length +
+            ' members fetched. Tick "Client" for the client-side people, then choose the POC below.';
+          if (unresolved > 0) {
+            msg += ` ${unresolved} member(s) have no name or number yet. Fetch again in a minute, use "Find" with their number, or ask them to send a message in the group.`;
+          }
+          toast(msg);
+        } catch (e) {
+          toast(e.message);
+        }
+      }
+      document.getElementById("gmFetchMembersBtn").onclick =
+        fetchGroupMembersIntoForm;
+
+      // Step 2 doesn't call the backend again — it just re-reads whatever Step 1
+      // already fetched (including any manually-added rows), live, so it always
+      // reflects the current Client ticks without a second network round-trip.
+      document.getElementById("gmFetchPocBtn").onclick = () => {
+        const rows = Array.from(
+          document.querySelectorAll("#gmMembers .member-row"),
+        );
+        if (!rows.length)
+          return toast("Fetch or add members first");
+        const candidates = rows
+          .filter((row) => !row.querySelector(".m-client").checked)
+          .map((row) => {
+            const input = row.querySelector(".m-jid");
+            return {
+              jid:
+                input.dataset.rawJid || normalizePhoneInput(input.value.trim()),
+              phone: input.dataset.rawPhone || "",
+              name: row.querySelector(".m-name").value.trim(),
+            };
+          })
+          .filter((m) => m.jid);
+        const sel = document.getElementById("gmPocMember");
+        if (!candidates.length) {
+          sel.innerHTML = `<option value="">Everyone is ticked Client</option>`;
+          return toast(
+            "Everyone in the list is ticked Client — a POC has to be someone else",
+          );
+        }
+        sel.innerHTML =
+          `<option value="">Select POC</option>` +
+          candidates
+            .map(
+              (m, i) =>
+                `<option value="${i}" data-jid="${esc(m.jid)}" data-phone="${esc(m.phone)}" data-name="${esc(m.name)}">${esc(memberLabel(m.name, m.phone, m.jid))}</option>`,
+            )
+            .join("");
+        toast(candidates.length + " candidate(s) for POC (Clients excluded)");
+      };
+
+      function addMemberRow(
+        jid = "",
+        name = "",
+        isClient = false,
+        jidReadonly = false,
+        phone = "",
+      ) {
+        const wrap = document.getElementById("gmMembers");
+        const div = document.createElement("div");
+        div.className = "member-row";
+        // When fetched from WhatsApp, `jid` is whatever WhatsApp is internally
+        // addressing this member as for this group — sometimes a readable
+        // phone-number jid, sometimes an opaque "...@lid" (WhatsApp's privacy
+        // mode). Either way we show WhatsApp's name for them + phone number
+        // (memberLabel) whenever we know it, so you can actually tell which row
+        // is which client — the jid itself is kept (hidden) and sent along so
+        // replies still resolve correctly either way.
+        const displayValue = jidReadonly ? memberLabel(name, phone, jid) : jid;
+        const editableName = jidReadonly
+          ? name || (phone ? phone.split("@")[0] : "")
+          : name;
+        div.innerHTML = `
+    <input placeholder="Phone number, e.g. 9198xxxxxxx" class="m-jid" value="${esc(displayValue)}" data-raw-jid="${esc(jid)}" data-raw-phone="${esc(phone)}" ${jidReadonly ? "readonly" : ""}/>
+    <input placeholder="Name (optional)" class="m-name" value="${esc(editableName)}"/>
+    <label class="check"><input type="checkbox" class="m-client" ${isClient ? "checked" : ""}/> Client</label>
+    <button class="icon-btn" type="button" title="Remove" aria-label="Remove">×</button>
+  `;
+        div.querySelector("button").onclick = () => div.remove();
+        wrap.appendChild(div);
+      }
+      document.getElementById("gmFindBtn").onclick = async () => {
+        const accountId = document.getElementById("gmAccount").value;
+        const groupJid = document.getElementById("gmGroupId").value.trim();
+        const number = document.getElementById("gmFindNumber").value.trim();
+        if (!accountId || !groupJid)
+          return toast("Pick a WhatsApp account and a group first");
+        if (!number)
+          return toast("Type the member's phone number with country code");
+        try {
+          const r = await api(
+            "/discover-groups/" +
+              encodeURIComponent(groupJid) +
+              "/lookup-number?account_id=" +
+              encodeURIComponent(accountId),
+            { method: "POST", body: JSON.stringify({ number }) },
+          );
+          if (!r.found) {
+            const why =
+              {
+                not_on_whatsapp: "That number isn't on WhatsApp.",
+                not_in_group:
+                  "That number is on WhatsApp but isn't a member of this group.",
+                cannot_link:
+                  "WhatsApp wouldn't tell us which member this number is (privacy). Try again in a minute, or tick the member by name.",
+              }[r.reason] || "Not found in this group.";
+            return toast(why);
+          }
+          const m = r.member;
+          const row = Array.from(
+            document.querySelectorAll("#gmMembers .member-row"),
+          ).find((rw) => {
+            const raw = rw.querySelector(".m-jid").dataset.rawJid;
+            return raw === m.jid || raw === m.lid;
+          });
+          if (!row)
+            return toast(
+              "Found the member, but fetch group members first so the row exists",
+            );
+          const input = row.querySelector(".m-jid");
+          input.dataset.rawPhone = m.phoneNumber;
+          const nameInput = row.querySelector(".m-name");
+          const knownName =
+            nameInput.value && !/^\d+$/.test(nameInput.value)
+              ? nameInput.value
+              : "";
+          input.value = memberLabel(knownName, m.phoneNumber, m.jid);
+          row.classList.add("found");
+          row.scrollIntoView({ block: "center" });
+          toast(
+            "Found: +" +
+              m.phoneNumber.split("@")[0] +
+              " — now tick Client if this is the client",
+          );
+        } catch (e) {
+          toast(e.message);
+        }
+      };
+      document.getElementById("gmAddMemberBtn").onclick = () => addMemberRow();
+
+      document.getElementById("gmSaveBtn").onclick = async () => {
+        const members = Array.from(
+          document.querySelectorAll("#gmMembers .member-row"),
+        )
+          .map((row) => {
+            const input = row.querySelector(".m-jid");
+            const rawJid = input.dataset.rawJid; // set only for fetched (readonly) rows
+            const rawPhone = input.dataset.rawPhone;
+            const typed = input.value.trim();
+            return {
+              // Fetched row: always send the real jid we fetched (rawJid), never
+              // whatever display text is shown. Manually-typed row: normalize
+              // "9198xxxxxxx" / "+9198xxxxxxx" into a proper phone jid.
+              jid: rawJid || normalizePhoneInput(typed),
+              phone: rawJid ? rawPhone || "" : normalizePhoneInput(typed),
+              name: row.querySelector(".m-name").value.trim(),
+              role: row.querySelector(".m-client").checked
+                ? "client"
+                : "internal",
+            };
+          })
+          .filter((m) => m.jid);
+
+        const pocOpt =
+          document.getElementById("gmPocMember").selectedOptions[0];
+        const pocMember =
+          pocOpt && pocOpt.value !== ""
+            ? {
+                jid: pocOpt.dataset.jid,
+                name: pocOpt.dataset.name,
+                phone: pocOpt.dataset.phone,
+              }
+            : null;
+        if (
+          pocMember &&
+          members.some((m) => m.jid === pocMember.jid && m.role === "client")
+        ) {
+          return toast(
+            "That member is ticked Client. Pick someone else as POC, or untick them first",
+          );
+        }
+
+        const payload = {
+          account_id: document.getElementById("gmAccount").value,
+          whatsapp_group_id: document.getElementById("gmGroupId").value.trim(),
+          group_name: document.getElementById("gmGroupName").value.trim(),
+          assigned_poc_id: document.getElementById("gmPoc").value || null,
+          poc_member: pocMember,
+          ai_mode: document.getElementById("gmMode").value,
+          members,
+        };
+        if (!payload.account_id || !payload.whatsapp_group_id) {
+          return toast("Account and WhatsApp Group ID are required");
+        }
+        try {
+          const created = await api("/groups", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          document.getElementById("groupModalBg").classList.remove("show");
+          // history_imported = older messages already sitting in this
+          // account's WhatsApp backlog, imported straight into this group's
+          // first thread (see group_db.import_group_history). More may
+          // still be arriving in the background from WhatsApp — see the
+          // "Import older chat history" button on the group's page.
+          toast(
+            created.history_imported
+              ? `Group added — imported ${created.history_imported} older message(s) into its conversation thread`
+              : "Group added — no older WhatsApp backlog found yet (use \"Import older chat history\" on the group's page to try again)",
+          );
+          showView("groups");
+        } catch (e) {
+          toast(e.message);
+        }
+      };
+
+      // ---------------- Thread view ----------------
+
+      function renderThreadAiState(thread) {
+        const box = document.getElementById("threadAiState");
+        const pauseBtn = document.getElementById("threadPauseBtn");
+        const resumeBtn = document.getElementById("threadResumeBtn");
+        if (thread.ai_paused) {
+          box.textContent =
+            "AI is currently PAUSED for this conversation — only manual replies go out.";
+          pauseBtn.disabled = true;
+          resumeBtn.disabled = false;
+        } else {
+          box.textContent =
+            "AI is active for this conversation (subject to the group's overall reply mode).";
+          pauseBtn.disabled = false;
+          resumeBtn.disabled = true;
+        }
+        document.getElementById("threadStatusSelect").value = thread.status;
+      }
+
+      async function openThread(threadId, group) {
+        const [msgs, thread] = await Promise.all([
+          api("/threads/" + threadId + "/messages"),
+          api("/threads/" + threadId),
+        ]);
+        CURRENT_THREAD = threadId;
+        document.getElementById("threadModalTitle").textContent =
+          (group.group_name || group.whatsapp_group_id) + " — conversation";
+        document.getElementById("threadMessages").innerHTML =
+          msgs
+            .map(
+              (m) => `
+    <div class="bubble ${m.sender_role}">
+      <div class="who">${esc(m.sender_name || m.sender_role)} · ${esc(m.created_at || "")}</div>
+      ${esc(m.body)}
+    </div>
+  `,
+            )
+            .join("") || `<p class="muted">No messages yet.</p>`;
+        document.getElementById("threadReplyText").value = "";
+        renderThreadAiState(thread);
+        document.getElementById("threadModalBg").classList.add("show");
+
+        document.getElementById("threadPauseBtn").onclick = async () => {
+          const t = await api("/threads/" + threadId + "/pause", {
+            method: "POST",
+          });
+          renderThreadAiState(t);
+          toast("AI paused for this conversation");
+        };
+        document.getElementById("threadResumeBtn").onclick = async () => {
+          const t = await api("/threads/" + threadId + "/resume", {
+            method: "POST",
+          });
+          renderThreadAiState(t);
+          toast("AI resumed for this conversation");
+        };
+        document.getElementById("threadStatusSelect").onchange = async (e) => {
+          await api("/threads/" + threadId + "/status", {
+            method: "POST",
+            body: JSON.stringify({ status: e.target.value }),
+          });
+          toast("Thread marked " + e.target.value);
+        };
+        document.getElementById("threadReplySendBtn").onclick = async () => {
+          const text = document.getElementById("threadReplyText").value.trim();
+          if (!text) return;
+          try {
+            await api("/threads/" + threadId + "/reply", {
+              method: "POST",
+              body: JSON.stringify({ text }),
+            });
+            toast("Reply sent");
+            openThread(threadId, group);
+          } catch (e) {
+            toast(e.message);
+          }
+        };
+      }
+      document.getElementById("threadCloseBtn").onclick = () =>
+        document.getElementById("threadModalBg").classList.remove("show");
+
+      // ---------------- Approvals ----------------
+
+      async function renderApprovals(main) {
+        const items = await api("/approvals");
+        main.innerHTML = `
+    <h1>Pending Approvals</h1>
+    <div class="muted" style="font-size:12px;margin:-6px 0 14px;">
+      Groups set to <b>Human approval</b> mode land here: the AI drafts a reply but does not send it.
+      Edit the text if needed, then Approve &amp; send (sends it to the WhatsApp group) or Reject
+      (discards the draft — no reply goes out for that message).
+    </div>
+    <div class="card">
+      ${
+        items
+          .map(
+            (a) => `
+        <div class="card" style="background:var(--wa-panel-2);">
+          <div class="muted" style="font-size:12px;">Approval #${a.id} · ${esc(a.created_at)}</div>
+          <textarea class="approval-text" data-id="${a.id}" rows="3" style="width:100%;margin:8px 0;">${esc(a.draft_reply)}</textarea>
+          <div class="row">
+            <button class="btn" data-approve="${a.id}">Approve &amp; send</button>
+            <button class="btn secondary" data-reject="${a.id}">Reject</button>
+          </div>
+        </div>
+      `,
+          )
+          .join("") || `<p class="muted">No pending approvals.</p>`
+      }
+    </div>
+  `;
+        main.querySelectorAll("[data-approve]").forEach((btn) => {
+          btn.onclick = async () => {
+            const id = btn.dataset.approve;
+            const text = document.querySelector(
+              `.approval-text[data-id="${id}"]`,
+            ).value;
+            try {
+              await api("/approvals/" + id + "/approve", {
+                method: "POST",
+                body: JSON.stringify({ edited_text: text }),
+              });
+              toast("Sent");
+              renderApprovals(main);
+            } catch (e) {
+              toast(e.message);
+            }
+          };
+        });
+        main.querySelectorAll("[data-reject]").forEach((btn) => {
+          btn.onclick = async () => {
+            await api("/approvals/" + btn.dataset.reject + "/reject", {
+              method: "POST",
+            });
+            toast("Rejected");
+            renderApprovals(main);
+          };
+        });
+      }
+
+      // ---------------- Message logs ----------------
+
+      async function renderLogs(main) {
+        const msgs = await api("/messages");
+        main.innerHTML = `
+    <div class="row between"><h1>Message Logs</h1>
+      <label><input type="checkbox" id="failedOnlyCk"/> Failed only</label></div>
+    <div class="muted" style="font-size:12px;margin:-6px 0 14px;">
+      Every message across every client group — sent and received, by the AI or by a person — for
+      auditing/debugging. Tick "Failed only" to see messages that didn't send or that the AI
+      couldn't process, so you can spot problems quickly.
+    </div>
+    <div class="card">
+      <table><thead><tr><th>Dir</th><th>Sender</th><th>Body</th><th>Status</th><th>Delivery</th><th>When</th></tr></thead>
+      <tbody id="logsBody">${logsRows(msgs)}</tbody></table>
+    </div>
+  `;
+        document.getElementById("failedOnlyCk").onchange = async (e) => {
+          const rows = await api(
+            "/messages?failed_only=" + (e.target.checked ? "true" : "false"),
+          );
+          document.getElementById("logsBody").innerHTML = logsRows(rows);
+        };
+      }
+      function logsRows(msgs) {
+        return (
+          msgs
+            .map(
+              (m) => `
+    <tr><td>${m.direction}</td><td>${esc(m.sender_name || m.sender_role)}</td>
+        <td>${esc((m.body || "").slice(0, 60))}</td>
+        <td>${m.processing_status}</td><td>${m.delivery_status}</td>
+        <td class="muted">${esc(m.created_at)}</td></tr>
+  `,
+            )
+            .join("") ||
+          `<tr><td colspan="6" class="muted">No messages logged yet.</td></tr>`
+        );
+      }
+
+      // ---------------- POC accounts (admin only) ----------------
+
+      async function renderPocs(main) {
+        const pocs = await api("/pocs");
+        main.innerHTML = `
+    <div class="row between"><h1>Team Users</h1><button class="btn" id="addPocBtn">+ Add user</button></div>
+    <div class="muted" style="font-size:12px;margin:-6px 0 14px;">
+      These are dashboard logins for your own team — <b>admin</b> sees every client group,
+      <b>poc</b> only sees the groups assigned to them. This is the list the "Assigned POC"
+      dropdown on a client group is picked from.
+    </div>
+    <div class="card">
+      <table><thead><tr><th>Name</th><th>Username</th><th>Role</th></tr></thead>
+      <tbody>${pocs.map((p) => `<tr><td>${esc(p.name)}</td><td>${esc(p.username)}</td><td>${p.role}</td></tr>`).join("") || `<tr><td colspan="3" class="muted">No team users yet.</td></tr>`}</tbody></table>
+    </div>
+  `;
+        document.getElementById("addPocBtn").onclick = () =>
+          document.getElementById("pocModalBg").classList.add("show");
+      }
+      document.getElementById("pmCancelBtn").onclick = () =>
+        document.getElementById("pocModalBg").classList.remove("show");
+      document.getElementById("pmSaveBtn").onclick = async () => {
+        const payload = {
+          username: document.getElementById("pmUsername").value.trim(),
+          name: document.getElementById("pmName").value.trim(),
+          password: document.getElementById("pmPassword").value,
+          role: document.getElementById("pmRole").value,
+        };
+        try {
+          await api("/pocs", { method: "POST", body: JSON.stringify(payload) });
+          document.getElementById("pocModalBg").classList.remove("show");
+          toast("Account created");
+          POCS = await api("/pocs");
+          showView("pocs");
+        } catch (e) {
+          toast(e.message);
+        }
+      };
+
+      // ---------------- util ----------------
+
+      function esc(s) {
+        return String(s ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+
+      // ---------------- init ----------------
+
+      (async function init() {
+        document.getElementById("bootstrapNote").textContent =
+          "First time here? Enter a new username/password above and confirm the prompt to create the admin account.";
+        if (TOKEN) {
+          try {
+            await boot();
+          } catch (e) {
+            logout();
+          }
+        }
+      })();
+    </script>
+    <script src="crm.js"></script>
+    <script src="crm-projects.js"></script>
+    <script src="crm-v12.js"></script>
+    <script src="verified-updates.js"></script>
+  </body>
+</html>
